@@ -41,54 +41,46 @@ api.interceptors.response.use(
  * AUTH API
  */
 export const authAPI = {
-    register: (data) => api.post('/auth/register', data),
-    login: (data) => api.post('/auth/login', data),
-    getCurrentUser: () => api.get('/auth/me')
+    register: (data) => api.post('/api/auth/register', data),
+    login: (data) => api.post('/api/auth/login', data),
+    getCurrentUser: () => api.get('/api/auth/me')
 };
 
 /**
  * GROUP API
  */
 export const groupAPI = {
-    create: (data) => api.post('/groups', data),
-    getAll: (includeArchived = false) => api.get(`/groups?includeArchived=${includeArchived}`),
-    getById: (groupId) => api.get(`/groups/${groupId}`),
-    addMember: (groupId, data) => api.post(`/groups/${groupId}/members`, data),
-    getBalances: (groupId) => api.get(`/groups/${groupId}/balances`),
-    getSettlement: (groupId, optimize = false) => api.get(`/groups/${groupId}/settlement?optimize=${optimize}`),
-    getActivities: (groupId) => api.get(`/groups/${groupId}/activity`),
-    removeMember: (groupId, memberId) => api.delete(`/groups/${groupId}/members/${memberId}`),
-    deleteGroup: (groupId) => api.delete(`/groups/${groupId}`),
-    recordSettlement: (groupId, data) => api.post(`/groups/${groupId}/settlements`, data),
-    undoSettlement: (groupId, settlementId) => api.delete(`/groups/${groupId}/settlements/${settlementId}`),
-    getUserSettlements: (groupId) => api.get(`/groups/${groupId}/user-settlements`),
-    // Archive management
-    archiveGroup: (groupId) => api.put(`/groups/${groupId}/archive`),
-    unarchiveGroup: (groupId) => api.put(`/groups/${groupId}/unarchive`),
-    // Admin management
-    addAdmin: (groupId, userId) => api.post(`/groups/${groupId}/admins`, { userId }),
-    removeAdmin: (groupId, adminId) => api.delete(`/groups/${groupId}/admins/${adminId}`)
+    create: (data) => api.post('/api/groups', data),
+    getAll: (includeArchived = false) => api.get(`/api/groups?includeArchived=${includeArchived}`),
+    getById: (groupId) => api.get(`/api/groups/${groupId}`),
+    addMember: (groupId, data) => api.post(`/api/groups/${groupId}/members`, data),
+    getBalances: (groupId) => api.get(`/api/groups/${groupId}/balances`),
+    getSettlement: (groupId, optimize = false) => api.get(`/api/groups/${groupId}/settlement?optimize=${optimize}`),
+    getActivities: (groupId) => api.get(`/api/groups/${groupId}/activity`),
+    removeMember: (groupId, memberId) => api.delete(`/api/groups/${groupId}/members/${memberId}`),
+    deleteGroup: (groupId) => api.delete(`/api/groups/${groupId}`),
+    recordSettlement: (groupId, data) => api.post(`/api/groups/${groupId}/settlements`, data),
+    undoSettlement: (groupId, settlementId) => api.delete(`/api/groups/${groupId}/settlements/${settlementId}`),
+    getUserSettlements: (groupId) => api.get(`/api/groups/${groupId}/user-settlements`),
+    archiveGroup: (groupId) => api.put(`/api/groups/${groupId}/archive`),
+    unarchiveGroup: (groupId) => api.put(`/api/groups/${groupId}/unarchive`),
+    addAdmin: (groupId, userId) => api.post(`/api/groups/${groupId}/admins`, { userId }),
+    removeAdmin: (groupId, adminId) => api.delete(`/api/groups/${groupId}/admins/${adminId}`)
 };
 
-/**
- * EXPENSE API
- */
 export const expenseAPI = {
-    create: (data) => api.post('/expenses', data),
-    getByGroup: (groupId, params) => api.get(`/groups/${groupId}/expenses`, { params }),
-    update: (expenseId, data) => api.put(`/expenses/${expenseId}`, data),
-    delete: (expenseId) => api.delete(`/expenses/${expenseId}`)
+    create: (data) => api.post('/api/expenses', data),
+    getByGroup: (groupId, params) => api.get(`/api/groups/${groupId}/expenses`, { params }),
+    update: (expenseId, data) => api.put(`/api/expenses/${expenseId}`, data),
+    delete: (expenseId) => api.delete(`/api/expenses/${expenseId}`)
 };
 
-/**
- * NOTIFICATION API
- */
 export const notificationAPI = {
-    getAll: (params) => api.get('/notifications', { params }),
-    markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
-    markAllAsRead: () => api.put('/notifications/read-all'),
-    delete: (notificationId) => api.delete(`/notifications/${notificationId}`),
-    sendReminders: (groupId) => api.post(`/notifications/reminders/${groupId}`)
+    getAll: (params) => api.get('/api/notifications', { params }),
+    markAsRead: (notificationId) => api.put(`/api/notifications/${notificationId}/read`),
+    markAllAsRead: () => api.put('/api/notifications/read-all'),
+    delete: (notificationId) => api.delete(`/api/notifications/${notificationId}`),
+    sendReminders: (groupId) => api.post(`/api/notifications/reminders/${groupId}`)
 };
 
 // Export base api for NotificationBell
