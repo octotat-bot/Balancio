@@ -1,11 +1,6 @@
 import axios from 'axios';
 
-/**
- * API CLIENT
- * Centralized HTTP client with authentication
- */
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://balancio-backend-one.vercel.app';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
