@@ -36,13 +36,27 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
     res.json({
         success: true,
-        message: 'Split Expense API',
+        name: 'Balancio API',
+        message: 'Welcome to Balancio - Split Expense Management API',
         version: '1.0.0',
+        status: 'running',
         endpoints: {
             auth: '/api/auth',
             groups: '/api/groups',
-            expenses: '/api/expenses'
-        }
+            expenses: '/api/expenses',
+            notifications: '/api/notifications'
+        },
+        documentation: 'https://github.com/octotat-bot/Balancio'
+    });
+});
+
+app.get('/health', (req, res) => {
+    res.json({
+        success: true,
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
     });
 });
 
