@@ -1,0 +1,231 @@
+.settlement-view-container {
+    padding: var(--space-8) 0;
+}
+
+.settlement-header {
+    margin-bottom: var(--space-8);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.settlement-complete {
+    text-align: center;
+    padding: var(--space-16) var(--space-8);
+}
+
+.celebration-icon {
+    font-size: 6rem;
+    margin-bottom: var(--space-6);
+    animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+.settlement-complete h2 {
+    font-size: var(--font-size-3xl);
+    color: var(--success-600);
+    margin-bottom: var(--space-4);
+}
+
+.settlement-complete p {
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+}
+
+.settlements-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.settlement-item {
+    background: var(--bg-primary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr auto;
+    gap: var(--space-4);
+    align-items: center;
+}
+
+.btn-mark-paid {
+    background: var(--success-500);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-mark-paid:hover {
+    background: var(--success-600);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(var(--success-500-rgb), 0.3);
+}
+
+.btn-mark-paid.btn-pay {
+    background: var(--primary-500);
+}
+
+.btn-mark-paid.btn-pay:hover {
+    background: var(--primary-600);
+    box-shadow: 0 4px 12px rgba(var(--primary-500-rgb), 0.3);
+}
+
+.btn-mark-paid.btn-receive {
+    background: var(--success-500);
+}
+
+.btn-mark-paid.btn-receive:hover {
+    background: var(--success-600);
+    box-shadow: 0 4px 12px rgba(var(--success-500-rgb), 0.3);
+}
+
+.settlement-user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.settlement-user.to-user {
+    justify-content: flex-end;
+}
+
+.user-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.user-avatar.debtor {
+    background: linear-gradient(135deg, var(--warning-500) 0%, var(--warning-600) 100%);
+}
+
+.user-avatar.creditor {
+    background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.to-user .user-info {
+    align-items: flex-end;
+}
+
+.user-name {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-role {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.settlement-arrow-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settlement-arrow {
+    width: 100%;
+    height: 60px;
+}
+
+.settlement-amount {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--primary-500);
+    color: white;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    box-shadow: var(--shadow-md);
+    white-space: nowrap;
+}
+
+.settlement-summary {
+    margin-top: var(--space-8);
+}
+
+.summary-card {
+    background: linear-gradient(135deg, var(--primary-50) 0%, var(--success-50) 100%);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+    border: 1px solid var(--primary-200);
+}
+
+.summary-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.summary-content h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.summary-content p {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .settlement-item {
+        grid-template-columns: 1fr;
+        gap: var(--space-6);
+    }
+
+    .settlement-user.to-user {
+        justify-content: flex-start;
+    }
+
+    .to-user .user-info {
+        align-items: flex-start;
+    }
+
+    .settlement-arrow-container {
+        transform: rotate(90deg);
+        height: 100px;
+    }
+}
