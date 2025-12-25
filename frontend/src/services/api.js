@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://balancio-backend-one.vercel.app';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-4cuv4ll4q-octotat-bots-projects.vercel.app';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
