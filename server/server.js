@@ -47,6 +47,20 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Balancio API Server',
+        version: '1.0.0',
+        endpoints: {
+            health: '/api/health',
+            auth: '/api/auth',
+            groups: '/api/groups',
+            friends: '/api/friends',
+            settlements: '/api/settlements'
+        }
+    });
+});
+
 app.use((err, req, res, next) => {
     let statusCode = err.status || 500;
     let message = err.message || 'Something went wrong!';
