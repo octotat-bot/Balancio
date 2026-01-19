@@ -1,0 +1,155 @@
+import User from '../models/User.js';
+import Group from '../models/Group.js';
+import { generateToken } from '../middleware/auth.js';
+import { normalizePhone } from '../utils/phone.js';
+
+export const signup = async (req, res, next) => {
+    try {
+        const { name, email, phone, password } = req.body;
+
+        const normalizedPhone = normalizePhone(phone);
+
+        const existingUser = await User.findOne({
+            $or: [{ email }, { phone: normalizedPhone }]
+        });
+
+        if (existingUser) {
+            if (existingUser.email === email) {
+                return res.status(400).json({ message: 'Email already registered' });
+            }
+            if (existingUser.phone === normalizedPhone) {
+                return res.status(400).json({ message: 'Phone number already registered' });
+            }
+        }
+
+        const user = await User.create({ name, email, phone: normalizedPhone, password });
+
+        const groupsWithPendingMember = await Group.find({
+            $or: [
+                { 'pendingMembers.phone': normalizedPhone },
+                { 'pendingMembers.phone': phone }
+            ]
+        });
+
+        if (groupsWithPendingMember.length > 0) {
+            for (const group of groupsWithPendingMember) {
+                if (!group.members.includes(user._id)) {
+                    group.members.push(user._id);
+                }
+                group.pendingMembers = group.pendingMembers.filter(
+                    pm => normalizePhone(pm.phone) !== normalizedPhone
+                );
+                await group.save();
+            }
+        }
+
+        const token = generateToken(user._id);
+
+        res.status(201).json({
+            message: 'Account created successfully',
+            user: user.toJSON(),
+            token,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+export const login = async (req, res, next) => {
+    try {
+        const { identifier, password, type } = req.body;
+
+        let user;
+        if (type === 'phone' || !identifier.includes('@')) {
+            const normalizedPhone = normalizePhone(identifier);
+            user = await User.findOne({ phone: normalizedPhone }).select('+password');
+        } else {
+            user = await User.findOne({ email: identifier }).select('+password');
+        }
+
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const isMatch = await user.comparePassword(password);
+
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const token = generateToken(user._id);
+
+        res.json({
+            message: 'Login successful',
+            user: user.toJSON(),
+            token,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getMe = async (req, res) => {
+    res.json({ user: req.user });
+};
+
+export const updateProfile = async (req, res, next) => {
+    try {
+        const { name, username, phone, currency, notifications, avatar } = req.body;
+
+        if (username && username !== req.user.username) {
+            const existingUser = await User.findOne({ username });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Username already taken' });
+            }
+        }
+
+        const normalizedPhone = phone ? normalizePhone(phone) : req.user.phone;
+        if (normalizedPhone && normalizedPhone !== req.user.phone) {
+            const existingUser = await User.findOne({ phone: normalizedPhone });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Phone number already registered' });
+            }
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.userId,
+            { name, username, phone: normalizedPhone, currency, notifications, avatar },
+            { new: true, runValidators: true }
+        );
+
+        res.json({ user });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const changePassword = async (req, res, next) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        const user = await User.findById(req.userId).select('+password');
+
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteAccount = async (req, res, next) => {
+    try {
+        await User.findByIdAndDelete(req.userId);
+        res.json({ message: 'Account deleted successfully' });
+    } catch (error) {
+        next(error);
+    }
+};

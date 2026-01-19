@@ -1,0 +1,204 @@
+import { create } from 'zustand';
+import { io } from 'socket.io-client';
+import api from '../services/api';
+import useGroupStore from './groupStore';
+import useExpenseStore from './expenseStore';
+import useSettlementStore from './settlementStore';
+
+const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
+const getSocketUrl = () => {
+    const url = SOCKET_URL;
+    return url.replace(/\/api$/, '');
+};
+
+export const useChatStore = create((set, get) => ({
+    messages: [],
+    socket: null,
+    isConnected: false,
+    isLoading: false,
+    error: null,
+    typingUsers: {},
+
+    connect: () => {
+        if (get().socket) return;
+
+        const socket = io(getSocketUrl(), {
+            transports: ['websocket'],
+            autoConnect: true,
+            reconnection: true,
+        });
+
+        socket.on('connect', () => {
+            set({ isConnected: true });
+        });
+
+        socket.on('disconnect', () => {
+            set({ isConnected: false });
+        });
+
+        socket.on('receive_message', (message) => {
+            set((state) => {
+                if (state.messages.some(m => m._id === message._id)) return state;
+                return { messages: [message, ...state.messages] };
+            });
+        });
+
+        socket.on('receive_nudge', ({ toUserId, fromUserName }) => {
+            window.dispatchEvent(new CustomEvent('app:nudge', {
+                detail: { toUserId, fromUserName }
+            }));
+        });
+
+        socket.on('user_typing', ({ userId, userName, isTyping }) => {
+            set((state) => {
+                const newTyping = { ...state.typingUsers };
+                if (isTyping) {
+                    newTyping[userId] = { userName, isTyping };
+                } else {
+                    delete newTyping[userId];
+                }
+                return { typingUsers: newTyping };
+            });
+        });
+
+        socket.on('group_added', (group) => {
+            useGroupStore.getState().addGroup(group);
+        });
+
+        socket.on('expense_added', (expense) => {
+            const groupId = typeof expense.group === 'object' ? expense.group._id : expense.group;
+            useExpenseStore.getState().fetchExpenses(groupId);
+            useSettlementStore.getState().fetchBalances(groupId);
+            useGroupStore.getState().fetchGroups();
+        });
+
+        socket.on('expense_updated', (expense) => {
+            const groupId = typeof expense.group === 'object' ? expense.group._id : expense.group;
+            useExpenseStore.getState().fetchExpenses(groupId);
+            useSettlementStore.getState().fetchBalances(groupId);
+            useGroupStore.getState().fetchGroups();
+        });
+
+        socket.on('expense_deleted', (expenseId) => {
+            const currentGroup = useGroupStore.getState().currentGroup;
+            if (currentGroup) {
+                useExpenseStore.getState().fetchExpenses(currentGroup._id);
+                useSettlementStore.getState().fetchBalances(currentGroup._id);
+                useGroupStore.getState().fetchGroups();
+            }
+        });
+
+        socket.on('settlement_added', (settlement) => {
+            const groupId = typeof settlement.group === 'object' ? settlement.group._id : settlement.group;
+            useSettlementStore.getState().fetchSettlements(groupId);
+            useSettlementStore.getState().fetchBalances(groupId);
+            useGroupStore.getState().fetchGroups();
+        });
+
+        socket.on('settlement_confirmed', (settlement) => {
+            const groupId = typeof settlement.group === 'object' ? settlement.group._id : settlement.group;
+            useSettlementStore.getState().fetchSettlements(groupId);
+            useSettlementStore.getState().fetchBalances(groupId);
+            useGroupStore.getState().fetchGroups();
+        });
+
+        socket.on('settlement_deleted', (settlementId) => {
+            const currentGroup = useGroupStore.getState().currentGroup;
+            if (currentGroup) {
+                useSettlementStore.getState().fetchSettlements(currentGroup._id);
+                useSettlementStore.getState().fetchBalances(currentGroup._id);
+                useGroupStore.getState().fetchGroups();
+            }
+        });
+
+        socket.on('notification', ({ type, data }) => {
+            window.dispatchEvent(new CustomEvent('app:notification', {
+                detail: { type, data }
+            }));
+
+            if (type === 'friendRequest' || type === 'friendAccepted') {
+                window.dispatchEvent(new CustomEvent('app:friends-updated'));
+            }
+            if (type === 'friendExpenseAdded') {
+                window.dispatchEvent(new CustomEvent('app:friend-expenses-updated', {
+                    detail: { friendshipId: data.friendshipId }
+                }));
+            }
+            if (type === 'friendSettlement') {
+                window.dispatchEvent(new CustomEvent('app:friend-settlements-updated', {
+                    detail: { friendshipId: data.friendshipId }
+                }));
+            }
+            if (type === 'friendBalanceUpdated') {
+                window.dispatchEvent(new CustomEvent('app:friend-balance-updated', {
+                    detail: { friendshipId: data.friendshipId }
+                }));
+            }
+        });
+
+        set({ socket });
+    },
+
+    disconnect: () => {
+        const { socket } = get();
+        if (socket) {
+            socket.disconnect();
+            set({ socket: null, isConnected: false });
+        }
+    },
+
+    joinGroup: (groupId, userId) => {
+        const { socket } = get();
+        if (socket && groupId) {
+            socket.emit('join_group', { groupId, userId });
+            get().fetchMessages(groupId);
+        }
+    },
+
+    joinUserRoom: (userId) => {
+        const { socket } = get();
+        if (socket && userId) {
+            socket.emit('join_user', { userId });
+        }
+    },
+
+    leaveGroup: (groupId) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit('leave_group', { groupId });
+            set({ messages: [], typingUsers: {} });
+        }
+    },
+
+    fetchMessages: async (groupId) => {
+        set({ isLoading: true });
+        try {
+            const response = await api.get(`/messages/group/${groupId}`);
+            set({ messages: response.data.messages, isLoading: false });
+        } catch (error) {
+            set({ error: error.message, isLoading: false });
+        }
+    },
+
+    sendMessage: (groupId, userId, content) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit('send_message', { groupId, userId, content });
+        }
+    },
+
+    sendNudge: (groupId, userIdToNudge, fromUserName) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit('nudge', { groupId, toUserId: userIdToNudge, fromUserName });
+        }
+    },
+
+    sendTyping: (groupId, userId, userName, isTyping) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit('typing', { groupId, userId, userName, isTyping });
+        }
+    }
+}));

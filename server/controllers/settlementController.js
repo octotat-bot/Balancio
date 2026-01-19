@@ -1,0 +1,421 @@
+import Settlement from '../models/Settlement.js';
+import Group from '../models/Group.js';
+import Expense from '../models/Expense.js';
+import { sendNotificationToUser } from '../socket/index.js';
+
+export const getSettlements = async (req, res, next) => {
+    try {
+        const group = await Group.findById(req.params.groupId);
+        if (!group) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+
+        const isAdmin = group.admins.some(adminId => adminId.toString() === req.userId.toString());
+
+        let settlements;
+        if (isAdmin) {
+            settlements = await Settlement.find({ group: req.params.groupId })
+                .populate('from', 'name email phone')
+                .populate('to', 'name email phone')
+                .sort({ createdAt: -1 });
+        } else {
+            settlements = await Settlement.find({
+                group: req.params.groupId,
+                $or: [
+                    { from: req.userId },
+                    { to: req.userId }
+                ]
+            })
+                .populate('from', 'name email phone')
+                .populate('to', 'name email phone')
+                .sort({ createdAt: -1 });
+        }
+
+        res.json({ settlements, isAdmin });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const createSettlement = async (req, res, next) => {
+    try {
+        const { from, to, amount, note } = req.body;
+
+        if (!from || !to || !amount) {
+            return res.status(400).json({ message: 'From, to, and amount are required' });
+        }
+
+        if (from === to) {
+            return res.status(400).json({ message: 'Cannot settle with yourself' });
+        }
+
+        const group = await Group.findById(req.params.groupId);
+        if (!group) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+
+        const isMember = group.members.some(m => m.toString() === req.userId.toString());
+        if (!isMember) {
+            return res.status(403).json({ message: 'You are not a member of this group' });
+        }
+
+        const settlement = await Settlement.create({
+            group: req.params.groupId,
+            from,
+            to,
+            amount: parseFloat(amount),
+            note,
+            confirmedByRecipient: false,
+        });
+
+        await settlement.populate('from', 'name email phone');
+        await settlement.populate('to', 'name email phone');
+
+        if (req.io) {
+            req.io.to(req.params.groupId).emit('settlement_added', settlement);
+            req.io.to(req.params.groupId).emit('settlement_update', { type: 'SETTLEMENT_CREATED', groupId: req.params.groupId, settlement });
+        }
+
+        sendNotificationToUser(to.toString(), 'groupSettlement', {
+            _id: settlement._id,
+            from: settlement.from,
+            to: settlement.to,
+            amount: settlement.amount,
+            groupId: req.params.groupId,
+            groupName: group.name,
+            notificationType: 'groupSettlement'
+        });
+
+        res.status(201).json({
+            message: 'Settlement recorded successfully',
+            settlement,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const confirmSettlement = async (req, res, next) => {
+    try {
+        const settlement = await Settlement.findById(req.params.settlementId);
+
+        if (!settlement) {
+            return res.status(404).json({ message: 'Settlement not found' });
+        }
+
+        if (settlement.to.toString() !== req.userId.toString()) {
+            return res.status(403).json({ message: 'Only the recipient can confirm this settlement' });
+        }
+
+        settlement.confirmedByRecipient = true;
+        await settlement.save();
+
+        await settlement.populate('from', 'name email phone');
+        await settlement.populate('to', 'name email phone');
+
+        if (req.io) {
+            req.io.to(req.params.groupId).emit('settlement_confirmed', settlement);
+            req.io.to(req.params.groupId).emit('settlement_update', { type: 'SETTLEMENT_CONFIRMED', groupId: req.params.groupId, settlement });
+        }
+
+        res.json({
+            message: 'Settlement confirmed',
+            settlement,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteSettlement = async (req, res, next) => {
+    try {
+        const settlement = await Settlement.findById(req.params.settlementId);
+
+        if (!settlement) {
+            return res.status(404).json({ message: 'Settlement not found' });
+        }
+
+        const group = await Group.findById(settlement.group);
+        if (!group) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+
+        const isPayer = settlement.from.toString() === req.userId.toString();
+        const isRecipient = settlement.to.toString() === req.userId.toString();
+        const isAdmin = group.admins.some(adminId => adminId.toString() === req.userId.toString());
+
+        if (!isPayer && !isRecipient && !isAdmin) {
+            return res.status(403).json({ message: 'Only the payer, recipient, or an admin can delete this settlement' });
+        }
+
+        await Settlement.findByIdAndDelete(req.params.settlementId);
+
+        if (req.io) {
+            req.io.to(group._id.toString()).emit('settlement_deleted', req.params.settlementId);
+            req.io.to(group._id.toString()).emit('settlement_update', { type: 'SETTLEMENT_DELETED', groupId: group._id, settlementId: req.params.settlementId });
+        }
+
+        res.json({ message: 'Settlement deleted' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getBalances = async (req, res, next) => {
+    try {
+        const group = await Group.findById(req.params.groupId)
+            .populate('members', 'name email phone');
+
+        if (!group) {
+            return res.status(404).json({ message: 'Group not found' });
+        }
+
+        const isAdmin = group.admins.some(adminId => adminId.toString() === req.userId.toString());
+        const shouldSimplify = req.query.simplify === 'true';
+
+        const expenses = await Expense.find({ group: req.params.groupId }).populate('paidBy', 'name');
+        const settlements = await Settlement.find({ group: req.params.groupId, confirmedByRecipient: true })
+            .populate('from', 'name')
+            .populate('to', 'name');
+
+        const balances = {};
+        group.members.forEach(member => {
+            balances[member._id.toString()] = {
+                user: member,
+                paid: 0,
+                owes: 0,
+                balance: 0,
+            };
+        });
+
+        const pairwiseDebts = {};
+
+        expenses.forEach(expense => {
+            const payerId = expense.paidBy._id.toString();
+            if (balances[payerId]) {
+                balances[payerId].paid += expense.amount;
+            }
+
+            expense.splits.forEach(split => {
+                const userId = split.user.toString();
+                if (balances[userId]) {
+                    balances[userId].owes += split.amount;
+
+                    if (payerId !== userId) {
+                        const pairKey = [userId, payerId].sort().join('_');
+                        if (!pairwiseDebts[pairKey]) {
+                            pairwiseDebts[pairKey] = {
+                                personA: userId < payerId ? userId : payerId,
+                                personB: userId < payerId ? payerId : userId,
+                                aOwesB: 0,
+                                bOwesA: 0,
+                                expenses: []
+                            };
+                        }
+
+                        if (userId < payerId) {
+                            pairwiseDebts[pairKey].aOwesB += split.amount;
+                        } else {
+                            pairwiseDebts[pairKey].bOwesA += split.amount;
+                        }
+
+                        pairwiseDebts[pairKey].expenses.push({
+                            id: expense._id,
+                            description: expense.description,
+                            amount: split.amount,
+                            paidBy: expense.paidBy.name,
+                            date: expense.createdAt,
+                            category: expense.category
+                        });
+                    }
+                }
+            });
+        });
+
+        Object.values(balances).forEach(member => {
+            member.balance = member.paid - member.owes;
+        });
+
+        settlements.forEach(settlement => {
+            const fromId = (settlement.from._id || settlement.from).toString();
+            const toId = (settlement.to._id || settlement.to).toString();
+
+            if (balances[fromId]) {
+                balances[fromId].balance += settlement.amount;
+            }
+            if (balances[toId]) {
+                balances[toId].balance -= settlement.amount;
+            }
+
+            const pairKey = [fromId, toId].sort().join('_');
+            if (pairwiseDebts[pairKey]) {
+                if (fromId < toId) {
+                    pairwiseDebts[pairKey].aOwesB -= settlement.amount;
+                } else {
+                    pairwiseDebts[pairKey].bOwesA -= settlement.amount;
+                }
+
+                pairwiseDebts[pairKey].expenses.push({
+                    id: settlement._id,
+                    description: `Payment to ${settlement.to.name}`,
+                    amount: settlement.amount,
+                    paidBy: settlement.from.name,
+                    date: settlement.createdAt,
+                    category: 'payment',
+                    isPayment: true
+                });
+            }
+        });
+
+        const detailedDebts = [];
+        Object.values(pairwiseDebts).forEach(pair => {
+            const memberA = group.members.find(m => m._id.toString() === pair.personA);
+            const memberB = group.members.find(m => m._id.toString() === pair.personB);
+
+            if (!memberA || !memberB) return;
+
+            const netAmount = pair.aOwesB - pair.bOwesA;
+
+            detailedDebts.push({
+                personA: { _id: pair.personA, name: memberA.name },
+                personB: { _id: pair.personB, name: memberB.name },
+                aOwesB: Math.round(pair.aOwesB * 100) / 100,
+                bOwesA: Math.round(pair.bOwesA * 100) / 100,
+                netAmount: Math.round(Math.abs(netAmount) * 100) / 100,
+                netDirection: netAmount > 0 ? 'AtoB' : 'BtoA',
+                expenses: pair.expenses,
+                expenseCount: pair.expenses.length
+            });
+        });
+
+        let simplifiedDebts = [];
+        if (shouldSimplify) {
+            detailedDebts.forEach(pair => {
+                if (pair.netAmount > 0.01) {
+                    const from = pair.netDirection === 'AtoB' ? pair.personA : pair.personB;
+                    const to = pair.netDirection === 'AtoB' ? pair.personB : pair.personA;
+                    simplifiedDebts.push({
+                        from,
+                        to,
+                        amount: pair.netAmount,
+                        expenseCount: pair.expenseCount
+                    });
+                }
+            });
+        } else {
+            detailedDebts.forEach(pair => {
+                if (pair.aOwesB > 0.01) {
+                    simplifiedDebts.push({
+                        from: pair.personA,
+                        to: pair.personB,
+                        amount: pair.aOwesB,
+                        expenseCount: pair.expenses.filter(e => e.paidBy === pair.personB.name).length
+                    });
+                }
+                if (pair.bOwesA > 0.01) {
+                    simplifiedDebts.push({
+                        from: pair.personB,
+                        to: pair.personA,
+                        amount: pair.bOwesA,
+                        expenseCount: pair.expenses.filter(e => e.paidBy === pair.personA.name).length
+                    });
+                }
+            });
+        }
+
+        if (!isAdmin) {
+            simplifiedDebts = simplifiedDebts.filter(debt =>
+                debt.from._id.toString() === req.userId.toString() ||
+                debt.to._id.toString() === req.userId.toString()
+            );
+        }
+
+        res.json({
+            balances: Object.values(balances),
+            simplifiedDebts,
+            detailedDebts,
+            isAdmin,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+function calculateSimplifiedDebts(balances) {
+    const debts = [];
+
+    const debtors = balances
+        .filter(b => b.balance < -0.01)
+        .map(b => ({ userId: b.user._id, name: b.user.name, amount: -b.balance }))
+        .sort((a, b) => b.amount - a.amount);
+
+    const creditors = balances
+        .filter(b => b.balance > 0.01)
+        .map(b => ({ userId: b.user._id, name: b.user.name, amount: b.balance }))
+        .sort((a, b) => b.amount - a.amount);
+
+    let i = 0, j = 0;
+    while (i < debtors.length && j < creditors.length) {
+        const debtor = debtors[i];
+        const creditor = creditors[j];
+        const amount = Math.min(debtor.amount, creditor.amount);
+
+        if (amount > 0.01) {
+            debts.push({
+                from: { _id: debtor.userId, name: debtor.name },
+                to: { _id: creditor.userId, name: creditor.name },
+                amount: Math.round(amount * 100) / 100,
+            });
+        }
+
+        debtor.amount -= amount;
+        creditor.amount -= amount;
+
+        if (debtor.amount < 0.01) i++;
+        if (creditor.amount < 0.01) j++;
+    }
+
+    return debts;
+}
+
+function calculateDirectDebts(debtsMap, members, simplify = false) {
+    const debts = [];
+    const memberMap = members.reduce((acc, m) => ({ ...acc, [m._id.toString()]: m }), {});
+
+    Object.keys(debtsMap).forEach(fromId => {
+        const owesTo = debtsMap[fromId];
+        Object.keys(owesTo).forEach(toId => {
+            let amount = owesTo[toId];
+
+            if (simplify) {
+                if (debtsMap[toId] && debtsMap[toId][fromId]) {
+                    const reverseAmount = debtsMap[toId][fromId];
+                    if (amount >= reverseAmount) {
+                        amount -= reverseAmount;
+                        debtsMap[toId][fromId] = 0;
+                    } else {
+                        debtsMap[toId][fromId] -= amount;
+                        amount = 0;
+                    }
+                }
+            }
+
+            if (amount > 0.01) {
+                debts.push({
+                    from: { _id: fromId, name: memberMap[fromId]?.name },
+                    to: { _id: toId, name: memberMap[toId]?.name },
+                    amount: Math.round(amount * 100) / 100
+                });
+            }
+        });
+    });
+    return debts;
+}
+
+export default {
+    getSettlements,
+    createSettlement,
+    confirmSettlement,
+    deleteSettlement,
+    getBalances,
+};
