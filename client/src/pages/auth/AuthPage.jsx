@@ -64,6 +64,7 @@ export function AuthPage() {
     };
 
     const handleSignup = async (data) => {
+        console.log('Attempting signup with data:', { ...data, password: '***' });
         const result = await signup({
             name: data.name,
             email: data.email,
@@ -502,7 +503,7 @@ export function AuthPage() {
                                     </p>
                                 </motion.div>
 
-                                <form onSubmit={signupForm.handleSubmit(handleSignup)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <form onSubmit={signupForm.handleSubmit(handleSignup, (errors) => console.error('Validation errors:', errors))} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <motion.div variants={itemVariants}>
                                         <Input
                                             label="Full Name"
