@@ -58,6 +58,7 @@ export function AuthPage() {
             toast.success('👋 Welcome back!', 'Great to see you again');
             navigate('/dashboard');
         } else {
+            console.error('Login error:', result);
             toast.error('Login failed', result.message || 'Please check your credentials');
         }
     };
@@ -73,6 +74,7 @@ export function AuthPage() {
             toast.success('🎊 Welcome aboard!', 'Your account is ready to go');
             navigate('/dashboard');
         } else {
+            console.error('Signup error:', result);
             toast.error('Signup failed', result.message || 'Please try again with different details');
         }
     };
