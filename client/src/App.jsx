@@ -41,7 +41,17 @@ function App() {
 
   useEffect(() => {
     initAuth();
-  }, [initAuth]);
+
+    // Safety fallback: If hydration doesn't happen within 1s, force it
+    // This prevents the app from being stuck on the loading screen
+    const timer = setTimeout(() => {
+      if (!_hasHydrated) {
+        useAuthStore.setState({ _hasHydrated: true });
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [initAuth, _hasHydrated]);
 
   // Wait for Zustand to hydrate from localStorage before rendering routes
   if (!_hasHydrated) {
