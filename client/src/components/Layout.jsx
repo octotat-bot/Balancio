@@ -218,7 +218,7 @@ export function Layout() {
                         borderRadius: '12px',
                     }}
                 >
-                    <Avatar name={user?.name} size="md" />
+                    <Avatar name={user?.name} src={user?.avatar} size="md" />
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontWeight: '600', fontSize: '14px', color: '#0a0a0a', margin: 0 }}>
                             {user?.name || 'User'}

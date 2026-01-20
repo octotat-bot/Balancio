@@ -12,8 +12,6 @@ import {
     LogOut,
     Trash2,
     Camera,
-    DollarSign,
-    Bell,
     ChevronRight,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -69,8 +67,6 @@ export function Profile() {
 
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [currency, setCurrency] = useState(user?.currency || 'INR');
-    const [notifications, setNotifications] = useState(user?.notifications ?? true);
     const [expenseCount, setExpenseCount] = useState(0);
 
     useEffect(() => {
@@ -105,24 +101,43 @@ export function Profile() {
         },
     });
 
-    const handleImageUpload = (e) => {
+    const handleImageUpload = async (e) => {
         const file = e.target.files[0];
-        if (file) {
-            if (file.size > 500 * 1024) { // 500KB limit
-                toast.error('Image too large', 'Please choose an image under 500KB');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                await updateUser({ avatar: reader.result });
-                toast.success('📸 New look!', 'Profile photo updated successfully');
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            toast.error('Invalid file', 'Please select an image file');
+            return;
         }
+
+        // 1MB limit for base64 images
+        if (file.size > 1024 * 1024) {
+            toast.error('Image too large', 'Please choose an image under 1MB');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            try {
+                const result = await updateUser({ avatar: reader.result });
+                if (result.success) {
+                    toast.success('📸 New look!', 'Profile photo updated successfully');
+                } else {
+                    toast.error('Upload failed', result.message || 'Please try again');
+                }
+            } catch (error) {
+                toast.error('Upload failed', 'Please try again');
+            }
+        };
+        reader.onerror = () => {
+            toast.error('File error', 'Could not read the image file');
+        };
+        reader.readAsDataURL(file);
     };
 
     const handleProfileUpdate = async (data) => {
-        await updateUser({ ...data, currency, notifications });
+        await updateUser({ ...data });
         toast.success('✨ Profile updated!', 'Your changes have been saved');
     };
 
@@ -342,83 +357,6 @@ export function Profile() {
                 </form>
             </motion.div>
 
-            {/* Preferences */}
-            <motion.div variants={itemVariants} style={{ marginBottom: '24px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#a3a3a3', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Preferences
-                </h3>
-                <div
-                    style={{
-                        backgroundColor: '#fff',
-                        borderRadius: '16px',
-                        border: '1px solid #e5e5e5',
-                        overflow: 'hidden',
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px', borderBottom: '1px solid #f5f5f5' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <DollarSign style={{ width: '20px', height: '20px', color: '#525252' }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <p style={{ margin: 0, fontWeight: '500', fontSize: '15px', color: '#0a0a0a' }}>Currency</p>
-                        </div>
-                        <select
-                            value={currency}
-                            onChange={(e) => setCurrency(e.target.value)}
-                            style={{
-                                padding: '8px 12px',
-                                border: '1px solid #e5e5e5',
-                                borderRadius: '8px',
-                                fontSize: '14px',
-                                backgroundColor: '#fff',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            <option value="INR">INR (₹)</option>
-                            <option value="USD">USD ($)</option>
-                            <option value="EUR">EUR (€)</option>
-                            <option value="GBP">GBP (£)</option>
-                        </select>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '20px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Bell style={{ width: '20px', height: '20px', color: '#525252' }} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <p style={{ margin: 0, fontWeight: '500', fontSize: '15px', color: '#0a0a0a' }}>Notifications</p>
-                        </div>
-                        <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => setNotifications(!notifications)}
-                            style={{
-                                width: '52px',
-                                height: '28px',
-                                borderRadius: '14px',
-                                backgroundColor: notifications ? '#000' : '#e5e5e5',
-                                border: 'none',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                transition: 'background-color 0.2s ease',
-                            }}
-                        >
-                            <motion.div
-                                animate={{ x: notifications ? 24 : 2 }}
-                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                style={{
-                                    width: '24px',
-                                    height: '24px',
-                                    borderRadius: '50%',
-                                    backgroundColor: '#fff',
-                                    position: 'absolute',
-                                    top: '2px',
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                                }}
-                            />
-                        </motion.button>
-                    </div>
-                </div>
-            </motion.div>
 
             {/* Security */}
             <motion.div variants={itemVariants} style={{ marginBottom: '24px' }}>
