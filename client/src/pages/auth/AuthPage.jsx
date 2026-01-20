@@ -37,9 +37,17 @@ export function AuthPage() {
     const [isLogin, setIsLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
     const navigate = useNavigate();
     const { login, signup, isLoading } = useAuthStore();
     const toast = useToast();
+
+    // Listen to window resize for mobile detection
+    React.useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 900);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const loginForm = useForm({
         resolver: zodResolver(loginSchema),
@@ -125,6 +133,235 @@ export function AuthPage() {
         }
     };
 
+    // Mobile Layout - Vertical Stack
+    if (isMobile) {
+        return (
+            <div style={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                backgroundColor: '#fafafa',
+                overflow: 'auto',
+            }}>
+                {/* Dark Branding Header */}
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                        background: 'linear-gradient(135deg, #0a0a0a 0%, #171717 50%, #0a0a0a 100%)',
+                        padding: '40px 24px',
+                        textAlign: 'center',
+                        color: '#fff',
+                    }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+                        style={{
+                            width: '60px',
+                            height: '60px',
+                            borderRadius: '18px',
+                            background: 'linear-gradient(135deg, #fff 0%, #e5e5e5 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 20px',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                        }}
+                    >
+                        <Sparkles size={28} style={{ color: '#0a0a0a' }} />
+                    </motion.div>
+                    <h1 style={{ fontSize: '24px', fontWeight: '800', margin: 0 }}>Balancio</h1>
+                    <p style={{ fontSize: '14px', opacity: 0.8, margin: '8px 0 0' }}>
+                        {isLogin ? 'Welcome back!' : 'Create your account'}
+                    </p>
+                </motion.div>
+
+                {/* Form Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                        flex: 1,
+                        padding: '32px 24px',
+                        backgroundColor: '#fff',
+                    }}
+                >
+                    <AnimatePresence mode="wait">
+                        {isLogin ? (
+                            <motion.div
+                                key="mobile-login"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                            >
+                                <h2 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 8px' }}>Sign In</h2>
+                                <p style={{ fontSize: '14px', color: '#737373', margin: '0 0 24px' }}>
+                                    Enter your credentials to access your account
+                                </p>
+
+                                <form onSubmit={loginForm.handleSubmit(handleLogin)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <Input
+                                        label="Email or Phone"
+                                        placeholder="Enter your email or phone"
+                                        icon={Mail}
+                                        error={loginForm.formState.errors.identifier?.message}
+                                        {...loginForm.register('identifier')}
+                                    />
+                                    <div style={{ position: 'relative' }}>
+                                        <Input
+                                            label="Password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            placeholder="Enter your password"
+                                            icon={Lock}
+                                            error={loginForm.formState.errors.password?.message}
+                                            {...loginForm.register('password')}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '14px',
+                                                top: '38px',
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                color: '#737373',
+                                                padding: '4px',
+                                            }}
+                                        >
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                            <input type="checkbox" {...loginForm.register('rememberMe')} style={{ width: '18px', height: '18px' }} />
+                                            <span style={{ fontSize: '14px', color: '#525252' }}>Remember me</span>
+                                        </label>
+                                    </div>
+                                    <Button type="submit" loading={isLoading} icon={ArrowRight} iconPosition="right" style={{ width: '100%', padding: '14px' }}>
+                                        Sign In
+                                    </Button>
+                                </form>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="mobile-signup"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                            >
+                                <h2 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 8px' }}>Create Account</h2>
+                                <p style={{ fontSize: '14px', color: '#737373', margin: '0 0 24px' }}>
+                                    Fill in your details to get started
+                                </p>
+
+                                <form onSubmit={signupForm.handleSubmit(handleSignup)} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                    <Input
+                                        label="Full Name"
+                                        placeholder="Enter your name"
+                                        icon={User}
+                                        error={signupForm.formState.errors.name?.message}
+                                        {...signupForm.register('name')}
+                                    />
+                                    <Input
+                                        label="Email"
+                                        type="email"
+                                        placeholder="Enter your email"
+                                        icon={Mail}
+                                        error={signupForm.formState.errors.email?.message}
+                                        {...signupForm.register('email')}
+                                    />
+                                    <Input
+                                        label="Phone Number"
+                                        placeholder="Enter your phone"
+                                        icon={Phone}
+                                        error={signupForm.formState.errors.phone?.message}
+                                        {...signupForm.register('phone')}
+                                    />
+                                    <div style={{ position: 'relative' }}>
+                                        <Input
+                                            label="Password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            placeholder="Create a password"
+                                            icon={Lock}
+                                            error={signupForm.formState.errors.password?.message}
+                                            {...signupForm.register('password')}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '12px',
+                                                top: '38px',
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                color: '#737373',
+                                            }}
+                                        >
+                                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
+                                    <div style={{ position: 'relative' }}>
+                                        <Input
+                                            label="Confirm Password"
+                                            type={showConfirmPassword ? 'text' : 'password'}
+                                            placeholder="Confirm your password"
+                                            icon={Lock}
+                                            error={signupForm.formState.errors.confirmPassword?.message}
+                                            {...signupForm.register('confirmPassword')}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '12px',
+                                                top: '38px',
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                color: '#737373',
+                                            }}
+                                        >
+                                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                        </button>
+                                    </div>
+                                    <Button type="submit" loading={isLoading} icon={ArrowRight} iconPosition="right" style={{ width: '100%', padding: '14px', marginTop: '8px' }}>
+                                        Create Account
+                                    </Button>
+                                </form>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Toggle Link */}
+                    <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#737373' }}>
+                        {isLogin ? "Don't have an account? " : "Already have an account? "}
+                        <button
+                            onClick={toggleMode}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#0a0a0a',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                textDecoration: 'underline',
+                            }}
+                        >
+                            {isLogin ? 'Sign up' : 'Sign in'}
+                        </button>
+                    </p>
+                </motion.div>
+            </div>
+        );
+    }
+
+    // Desktop Layout - Original Sliding Panel
     return (
         <div style={{
             minHeight: '100vh',

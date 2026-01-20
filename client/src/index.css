@@ -481,3 +481,453 @@ body {
         font-size: 1.25rem !important;
     }
 }
+
+/* ============================================
+   AUTH PAGE MOBILE STYLES
+   ============================================ */
+
+/* Auth container on mobile - stack vertically */
+@media (max-width: 900px) {
+    .auth-container {
+        flex-direction: column !important;
+        min-height: auto !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .auth-panel {
+        position: relative !important;
+        width: 100% !important;
+        min-height: auto !important;
+        padding: 24px !important;
+        transform: none !important;
+    }
+
+    .auth-dark-panel {
+        order: -1 !important;
+        padding: 32px 24px !important;
+        min-height: 280px !important;
+        border-radius: 0 0 24px 24px !important;
+    }
+
+    .auth-form-panel {
+        padding: 32px 24px !important;
+    }
+
+    .auth-features {
+        display: none !important;
+    }
+
+    .auth-toggle-btn {
+        margin-top: 24px !important;
+    }
+}
+
+/* ============================================
+   DASHBOARD BENTO GRID - MOBILE
+   ============================================ */
+
+/* Dashboard grid on mobile */
+@media (max-width: 767px) {
+
+    .dashboard-grid,
+    .bento-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .dashboard-grid>*,
+    .bento-grid>* {
+        grid-column: span 1 !important;
+    }
+
+    .bento-item {
+        padding: 16px !important;
+        border-radius: 16px !important;
+        min-height: auto !important;
+    }
+
+    .bento-item-stats {
+        min-height: 100px !important;
+    }
+
+    /* Hero card adjustments */
+    .hero-card h1 {
+        font-size: 22px !important;
+    }
+
+    .hero-card h2 {
+        font-size: 28px !important;
+    }
+}
+
+/* Dashboard grid on tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+
+    .dashboard-grid,
+    .bento-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .dashboard-grid>*,
+    .bento-grid>* {
+        grid-column: span 1 !important;
+    }
+
+    /* Allow some items to span 2 columns */
+    .bento-span-2 {
+        grid-column: span 2 !important;
+    }
+}
+
+/* ============================================
+   FRIENDS PAGE - MOBILE BENTO LAYOUT
+   ============================================ */
+
+@media (max-width: 767px) {
+    .friends-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .friends-grid>* {
+        grid-column: span 1 !important;
+        grid-row: span 1 !important;
+    }
+
+    .friend-balance-card {
+        min-height: 160px !important;
+        padding: 20px !important;
+    }
+
+    .friend-balance-card h2 {
+        font-size: 32px !important;
+    }
+
+    .friend-stat-card {
+        padding: 16px !important;
+    }
+
+    .friend-stat-card p {
+        font-size: 22px !important;
+    }
+
+    .friend-chat-section {
+        min-height: 300px !important;
+    }
+
+    .friend-expenses-section {
+        min-height: auto !important;
+    }
+
+    /* Friend header on mobile */
+    .friend-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    }
+
+    .friend-header-actions {
+        width: 100% !important;
+        display: flex !important;
+        gap: 8px !important;
+    }
+
+    .friend-header-actions button {
+        flex: 1 !important;
+    }
+
+    /* Friends list grid */
+    .friends-list-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .friends-grid {
+        grid-template-columns: repeat(6, 1fr) !important;
+    }
+
+    .friends-grid>* {
+        grid-column: span 3 !important;
+    }
+
+    .friends-grid>.friend-chat-section {
+        grid-column: span 6 !important;
+    }
+}
+
+/* ============================================
+   SETTLEMENTS PAGE - MOBILE
+   ============================================ */
+
+@media (max-width: 767px) {
+    .settlements-summary {
+        grid-template-columns: 1fr !important;
+    }
+
+    .settlement-card {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    .settlement-card-amount {
+        align-self: flex-end !important;
+    }
+
+    .settlement-tabs {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 8px !important;
+    }
+
+    .settlement-tabs button {
+        flex-shrink: 0 !important;
+        padding: 8px 16px !important;
+    }
+}
+
+/* ============================================
+   GROUPS PAGE - MOBILE
+   ============================================ */
+
+@media (max-width: 767px) {
+    .groups-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 16px !important;
+    }
+
+    .groups-header button {
+        width: 100% !important;
+    }
+
+    .groups-search-bar {
+        flex-direction: column !important;
+    }
+
+    .groups-search-bar input {
+        width: 100% !important;
+    }
+
+    .group-card {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 16px !important;
+    }
+
+    .group-card-balance {
+        align-self: flex-end !important;
+    }
+}
+
+/* ============================================
+   PROFILE PAGE - MOBILE
+   ============================================ */
+
+@media (max-width: 767px) {
+    .profile-stats {
+        gap: 16px !important;
+    }
+
+    .profile-stats>div {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .profile-stats p:first-child {
+        font-size: 20px !important;
+    }
+
+    .setting-row {
+        padding: 14px 16px !important;
+    }
+}
+
+/* ============================================
+   MODALS - MOBILE FULLSCREEN
+   ============================================ */
+
+@media (max-width: 600px) {
+    .modal-overlay {
+        align-items: flex-end !important;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        border-radius: 20px 20px 0 0 !important;
+        max-height: 90vh !important;
+        padding: 20px !important;
+    }
+
+    .modal-full-mobile {
+        border-radius: 0 !important;
+        max-height: 100vh !important;
+        height: 100vh !important;
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES FOR MOBILE
+   ============================================ */
+
+/* Hide on mobile */
+@media (max-width: 767px) {
+    .hide-mobile {
+        display: none !important;
+    }
+}
+
+/* Show only on mobile */
+@media (min-width: 768px) {
+    .show-mobile {
+        display: none !important;
+    }
+}
+
+/* Mobile flex column */
+@media (max-width: 767px) {
+    .mobile-flex-col {
+        flex-direction: column !important;
+    }
+
+    .mobile-gap-sm {
+        gap: 8px !important;
+    }
+
+    .mobile-gap-md {
+        gap: 12px !important;
+    }
+
+    .mobile-gap-lg {
+        gap: 16px !important;
+    }
+
+    .mobile-w-full {
+        width: 100% !important;
+    }
+
+    .mobile-text-center {
+        text-align: center !important;
+    }
+
+    .mobile-items-start {
+        align-items: flex-start !important;
+    }
+
+    .mobile-justify-start {
+        justify-content: flex-start !important;
+    }
+
+    .mobile-p-sm {
+        padding: 12px !important;
+    }
+
+    .mobile-px-0 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .mobile-mx-0 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+}
+
+/* ============================================
+   IMPROVED SCROLLBARS
+   ============================================ */
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d4d4d4;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a3a3a3;
+}
+
+/* Hide scrollbar on mobile for horizontal scroll containers */
+@media (max-width: 767px) {
+    .scroll-hidden::-webkit-scrollbar {
+        display: none;
+    }
+
+    .scroll-hidden {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
+
+/* ============================================
+   IMPROVED TOUCH TARGETS
+   ============================================ */
+
+@media (max-width: 767px) {
+
+    button,
+    a,
+    input[type="checkbox"],
+    input[type="radio"],
+    select,
+    [role="button"] {
+        min-height: 44px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="number"],
+    textarea {
+        font-size: 16px !important;
+        /* Prevents zoom on iOS */
+    }
+}
+
+/* ============================================
+   FIXING INLINE STYLE OVERRIDES
+   ============================================ */
+
+/* Force responsive grid behavior for inline styled grids */
+@media (max-width: 767px) {
+    [style*="grid-template-columns: repeat(4"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    [style*="grid-template-columns: repeat(12"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    [style*="gridColumn: 'span"] {
+        grid-column: span 1 !important;
+    }
+
+    /* Any element with span styling */
+    [style*="span 2"],
+    [style*="span 3"],
+    [style*="span 4"],
+    [style*="span 5"],
+    [style*="span 6"],
+    [style*="span 7"],
+    [style*="span 8"],
+    [style*="span 12"] {
+        grid-column: span 1 !important;
+    }
+}

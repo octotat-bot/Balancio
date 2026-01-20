@@ -209,7 +209,7 @@ export function Dashboard() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="responsive-grid"
+            className="bento-grid responsive-grid"
             style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',

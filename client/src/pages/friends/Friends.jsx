@@ -434,7 +434,7 @@ export function Friends() {
         return (
             <div style={{ paddingBottom: '100px' }}>
                 {/* Header */}
-                <motion.div variants={itemVariants} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '32px' }}>
+                <motion.div variants={itemVariants} className="friend-header mobile-flex-col" style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '32px' }}>
                     <motion.button
                         whileHover={{ scale: 1.1, backgroundColor: '#f5f5f5' }}
                         whileTap={{ scale: 0.9 }}
@@ -455,7 +455,7 @@ export function Friends() {
                         <ArrowLeft style={{ width: '20px', height: '20px' }} />
                     </motion.button>
                     <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                             <Avatar name={friendData.name} size="lg" />
                             <div>
                                 <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0a0a0a', margin: '0 0 4px' }}>
@@ -470,7 +470,7 @@ export function Friends() {
                             </Badge>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="friend-header-actions" style={{ display: 'flex', gap: '8px' }}>
                         <Button
                             variant="ghost"
                             icon={Trash2}
@@ -487,7 +487,7 @@ export function Friends() {
 
                 {/* BENTO GRID LAYOUT */}
                 <div
-                    className="responsive-grid"
+                    className="friends-grid responsive-grid"
                     style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(12, 1fr)',

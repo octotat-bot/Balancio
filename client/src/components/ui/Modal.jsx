@@ -42,6 +42,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }) {
                     animate="visible"
                     exit="exit"
                     onClick={onClose}
+                    className="modal-overlay"
                     style={{
                         position: 'fixed',
                         inset: 0,

@@ -67,6 +67,7 @@ export function GroupList() {
             {/* Header */}
             <motion.div
                 variants={itemVariants}
+                className="groups-header mobile-flex-col"
                 style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -97,8 +98,9 @@ export function GroupList() {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, type: "spring" }}
+                    className="mobile-w-full"
                 >
-                    <Button icon={Plus} onClick={() => navigate('/groups/new')}>
+                    <Button icon={Plus} onClick={() => navigate('/groups/new')} className="mobile-w-full">
                         New Group
                     </Button>
                 </motion.div>

@@ -258,7 +258,7 @@ export function GroupDetail() {
             style={{ paddingBottom: '100px' }}
         >
             {/* Header */}
-            <motion.div variants={itemVariants} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '24px' }}>
+            <motion.div variants={itemVariants} className="friend-header mobile-flex-col" style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '24px' }}>
                 <motion.button
                     whileHover={{ scale: 1.1, backgroundColor: '#f5f5f5' }}
                     whileTap={{ scale: 0.9 }}
@@ -279,7 +279,7 @@ export function GroupDetail() {
                     <ArrowLeft style={{ width: '20px', height: '20px' }} />
                 </motion.button>
                 <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                         <Avatar name={currentGroup.name} size="lg" />
                         <div>
                             <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0a0a0a', margin: '0 0 4px' }}>{currentGroup.name}</h1>
@@ -290,13 +290,13 @@ export function GroupDetail() {
                         <p style={{ fontSize: '15px', color: '#525252', marginTop: '12px', margin: '12px 0 0' }}>{currentGroup.description}</p>
                     )}
                 </div>
-                <Button icon={Plus} onClick={() => setShowAddExpense(true)}>
+                <Button className="mobile-w-full" icon={Plus} onClick={() => setShowAddExpense(true)}>
                     Add Expense
                 </Button>
             </motion.div>
 
             {/* Tabs */}
-            <motion.div variants={itemVariants} style={{ display: 'flex', gap: '4px', borderBottom: '1px solid #e5e5e5', overflowX: 'auto', marginBottom: '24px', paddingBottom: '1px' }}>
+            <motion.div variants={itemVariants} className="scroll-hidden" style={{ display: 'flex', gap: '4px', borderBottom: '1px solid #e5e5e5', overflowX: 'auto', marginBottom: '24px', paddingBottom: '1px', WebkitOverflowScrolling: 'touch' }}>
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}
